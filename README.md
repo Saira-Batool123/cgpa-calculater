@@ -17,6 +17,10 @@ CSS: For styling and responsive design, using a pastel-themed aesthetic.
 JavaScript: For dynamic calculations and local storage functionality.
 Chart.js: For visualizing semester-wise GPA trends (optional feature).
 Font Awesome: For icons to enhance the UI.
+<img width="582" height="644" alt="image" src="https://github.com/user-attachments/assets/ddad9b3a-3819-47d8-a177-f18803d5c43f" />
+<img width="548" height="610" alt="image" src="https://github.com/user-attachments/assets/49fdb0c9-6a84-4978-99fe-5e8f91c0ade8" />
+<img width="567" height="643" alt="image" src="https://github.com/user-attachments/assets/a7b0bba2-ee32-4820-a286-90cd01803bf9" />
+
 
 Installation
 To run the CGPA Calculator locally, follow these steps:
