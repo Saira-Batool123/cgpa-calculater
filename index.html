@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>University CGPA Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        /* Default Light Blue Theme */
+        :root {
+            --primary-color: #1e90ff; /* Dodger Blue - Main accent */
+            --secondary-color: #6a89cc; /* Steel Blue - Lighter blue accent */
+            --focus-color: #ff6b6b; /* Reddish accent for focus */
+            --text-color-light: #333;
+            --text-color-dark: #e0e0e0; /* Used in dark mode */
+            --background-gradient-start: rgba(30, 144, 255, 0.4);
+            --background-gradient-end: rgba(106, 137, 204, 0.4);
+            --container-bg-light: rgba(255, 255, 255, 0.95);
+            --container-border-color: #1e90ff; /* Main form border color */
+            --input-bg-light: #ffffff;
+            --table-bg-light: #ffffff;
+            --table-row-even-light: #f5fafd; /* Very light blue for even rows */
+            --subject-entry-bg-light: rgba(255, 255, 255, 0.8);
+            --shadow-color-light: rgba(0, 0, 0, 0.25);
+        }
+
+        /* Dark Mode Overrides for the Blue Theme */
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: var(--text-color-dark);
+            --primary-color: #81ecec; /* Lighter turquoise for primary in dark */
+            --secondary-color: #a29bfe; /* Lavender for secondary in dark */
+            --focus-color: #ff7675; /* Slightly softer red for focus */
+            --background-gradient-start: rgba(45, 52, 54, 0.5); /* Darker, cool gray for background */
+            --background-gradient-end: rgba(99, 110, 114, 0.5);
+            --container-bg-light: rgba(30, 30, 30, 0.95); /* Dark container background */
+            --container-border-color: var(--primary-color); /* Primary color for border in dark mode */
+            --input-bg-light: #2d3436; /* Darker input background */
+            --table-bg-light: #2d3436; /* Darker table background */
+            --table-row-even-light: #353b48; /* Darker even row background */
+            --subject-entry-bg-light: rgba(40, 40, 40, 0.7);
+            --shadow-color-light: rgba(255, 255, 255, 0.2);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-image: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: var(--text-color-light); /* Default to light text color for light mode */
+            transition: background-color 0.3s, color 0.3s; /* Smooth transition for dark/light mode */
+            position: relative;
+        }
+
+        /* Background Animation Layer */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, var(--background-gradient-start), var(--background-gradient-end));
+            animation: backgroundFlow 30s ease-in-out infinite alternate;
+            background-size: 300% 300%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        @keyframes backgroundFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background-color: var(--container-bg-light);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px var(--shadow-color-light);
+            text-align: center;
+            max-width: 550px;
+            width: 90%;
+            animation: fadeIn 1s ease-in-out;
+            border: 4px solid var(--container-border-color); /* Dynamic border color */
+            transition: border-color 0.3s ease-in-out, background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            margin: 20px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            color: var(--primary-color); /* Uses primary color from root */
+            margin-bottom: 2rem;
+            font-size: 2.4rem;
+            font-weight: 800;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.15);
+            animation: slideInUp 1s ease-out;
+            transition: color 0.3s, text-shadow 0.3s; /* Smooth transition */
+        }
+
+        body.dark-mode h1 {
+            text-shadow: 2px 2px 5px rgba(255, 255, 255, 0.15);
+        }
+
+        @keyframes slideInUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+        }
+        .form-group:nth-child(1) { animation-delay: 0.1s; }
+        .form-group:nth-child(2) { animation-delay: 0.2s; }
+        .form-group:nth-child(3) { animation-delay: 0.3s; }
+        .form-group:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes fadeInUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color); /* Labels use primary color */
+            font-size: 1.05em;
+            transition: color 0.3s;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--primary-color); /* Blue border for inputs/selects */
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s, color 0.3s;
+            background-color: var(--input-bg-light);
+            color: var(--text-color-light); /* Default to light text color for inputs */
+        }
+
+        body.dark-mode input, body.dark-mode select {
+            background-color: var(--input-bg-light); /* Uses dark mode input bg */
+            color: var(--text-color-dark);
+            border-color: var(--secondary-color); /* Slightly different border in dark mode */
+        }
+
+        input:focus, select:focus {
+            border-color: var(--focus-color);
+            box-shadow: 0 0 10px var(--focus-color); /* Shadow uses focus color */
+            outline: none;
+        }
+
+        .subject-entry {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            background-color: var(--subject-entry-bg-light);
+            border-radius: 8px;
+            padding: 0.75rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--secondary-color); /* Light blue border for subject entries */
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out, background-color 0.3s, border-color 0.3s;
+            animation: slideInRight 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        .subject-entry:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        body.dark-mode .subject-entry {
+            background-color: var(--subject-entry-bg-light);
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.08);
+            border-color: var(--primary-color); /* Different border in dark mode */
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .subject-entry input, .subject-entry select {
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .remove-btn {
+            background: linear-gradient(45deg, #ff4757, #ff6b6b);
+            color: white;
+            padding: 0.6rem 0.8rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .remove-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.35);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 1.2rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+            animation: fadeIn 1s ease-out forwards;
+            animation-delay: 0.5s;
+            opacity: 0;
+        }
+
+        button {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color)); /* Buttons use theme colors */
+            color: white;
+            padding: 0.8rem 1.8rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.05rem;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.3s, background 0.3s;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--shadow-color-light); /* Uses dynamic shadow color */
+        }
+
+        /* Ripple Effect for Buttons */
+        button:after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            opacity: 0;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease-out, height 0.6s ease-out, opacity 0.6s ease-out;
+        }
+
+        button:active:after {
+            width: 300px;
+            height: 300px;
+            opacity: 1;
+            transition: 0s;
+        }
+
+        button#clearBtn {
+            background: linear-gradient(45deg, #ff4757, #ff6b6b);
+        }
+
+        button#toggleThemeBtn {
+            background: linear-gradient(45deg, #fdcb6e, #e17055); /* Yellow/Orange for toggle button */
+        }
+
+        button#addSubjectBtn {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+        }
+
+        button#downloadPdfBtn {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+        }
+
+        #result {
+            margin-top: 2.5rem;
+            font-size: 1.1rem;
+            color: var(--text-color-light); /* Uses default text color */
+            line-height: 1.7;
+            text-align: left;
+            animation: fadeInResult 0.8s ease-in;
+            transition: color 0.3s;
+        }
+
+        body.dark-mode #result {
+            color: var(--text-color-dark); /* Dark mode text color */
+        }
+
+        @keyframes fadeInResult {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.2rem;
+            margin-bottom: 1.8rem;
+            background-color: var(--table-bg-light);
+            box-shadow: 0 6px 20px var(--shadow-color-light);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--secondary-color); /* Table border uses secondary color */
+            transition: background-color 0.3s, box-shadow 0.3s, border-color 0.3s;
+        }
+
+        body.dark-mode table {
+            background-color: var(--table-bg-light);
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.1);
+            border-color: var(--primary-color); /* Table border changes in dark mode */
+        }
+
+        th, td {
+            border: 1px solid #dfe6e9; /* Light grey for internal table borders */
+            padding: 0.8rem;
+            text-align: left;
+            transition: border-color 0.3s, color 0.3s;
+        }
+
+        body.dark-mode th, body.dark-mode td {
+            border-color: #4b6584; /* Darker internal table borders */
+        }
+
+        th {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-weight: 700;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            transition: background 0.3s;
+        }
+
+        tr:nth-child(even) {
+            background-color: var(--table-row-even-light);
+        }
+
+        body.dark-mode tr:nth-child(even) {
+            background-color: var(--table-row-even-light); /* Dark mode even row bg */
+        }
+
+        .history-section {
+            margin-top: 2.5rem;
+        }
+
+        .history-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-weight: 700;
+            font-size: 1.8rem;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+            animation: slideInDown 0.8s ease-out;
+            transition: color 0.3s, text-shadow 0.3s;
+        }
+
+        @keyframes slideInDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .history-section h4 {
+            color: var(--secondary-color);
+            margin-top: 1.8rem;
+            font-weight: 600;
+            font-size: 1.3rem;
+            text-shadow: 0.5px 0.5px 1.5px rgba(0, 0, 0, 0.08);
+            animation: fadeIn 0.6s ease-out forwards;
+            transition: color 0.3s, text-shadow 0.3s;
+        }
+
+        body.dark-mode .history-section h3,
+        body.dark-mode .history-section h4 {
+            text-shadow: 0.5px 0.5px 1.5px rgba(255, 255, 255, 0.15);
+        }
+
+        .summary-table {
+            margin-top: 2.5rem;
+        }
+
+        .summary-table h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-weight: 700;
+            font-size: 1.8rem;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+            animation: slideInDown 0.8s ease-out;
+            transition: color 0.3s, text-shadow 0.3s;
+        }
+
+        .error {
+            color: #ff4757;
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+        }
+
+        body.dark-mode .error {
+            color: #ff7675;
+        }
+
+        .loader {
+            display: none;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color); /* Loader uses primary color */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 1.5rem auto;
+            transition: border-top-color 0.3s;
+        }
+
+        body.dark-mode .loader {
+            border-color: #4b6584;
+            border-top-color: var(--primary-color);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 1.2rem;
+                width: 98%;
+                max-width: 98%;
+                margin: 10px auto;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            button {
+                padding: 0.7rem 1.2rem;
+                font-size: 0.95rem;
+            }
+
+            .subject-entry {
+                flex-direction: column;
+                gap: 0.4rem;
+                padding: 0.5rem;
+            }
+
+            .subject-entry input, .subject-entry select {
+                min-width: 100%;
+            }
+
+            th, td {
+                padding: 0.5rem;
+                font-size: 0.9em;
+            }
+
+            .history-section h3, .summary-table h3 {
+                font-size: 1.5rem;
+            }
+
+            .history-section h4 {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>University CGPA Calculator</h1>
+        <div class="form-group">
+            <label for="studentName">Student Name</label>
+            <input type="text" id="studentName" placeholder="Enter your name" required>
+        </div>
+        <div class="form-group">
+            <label for="semester">Semester</label>
+            <select id="semester" onchange="loadSemesterData()">
+                <option value="1">Semester 1</option>
+                <option value="2">Semester 2</option>
+                <option value="3">Semester 3</option>
+                <option value="4">Semester 4</option>
+                <option value="5">Semester 5</option>
+                <option value="6">Semester 6</option>
+                <option value="7">Semester 7</option>
+                <option value="8">Semester 8</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="subjectTemplate">Load Subject Template</label>
+            <select id="subjectTemplate" onchange="loadTemplate()">
+                <option value="" selected>No Template</option>
+                <option value="bscs1">BSCS Semester 1</option>
+                <option value="bscs2">BSCS Semester 2</option>
+                <option value="bscs3">BSCS Semester 3</option>
+                <option value="bscs4">BSCS Semester 4</option>
+                <option value="bscs5">BSCS Semester 5</option>
+                <option value="bscs6">BSCS Semester 6</option>
+                <option value="bscs7">BSCS Semester 7</option>
+                <option value="bscs8">BSCS Semester 8</option>
+            </select>
+        </div>
+        <div id="subjects">
+            <div class="subject-entry">
+                <input type="text" class="subject-name" placeholder="Subject Name" required>
+                <select class="grade" required>
+                    <option value="" disabled selected>Select Grade</option>
+                    <option value="A+">A+</option>
+                    <option value="A">A</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B">B</option>
+                    <option value="B-">B-</option>
+                    <option value="C+">C+</option>
+                    <option value="C">C</option>
+                    <option value="C-">C-</option>
+                    <option value="D+">D+</option>
+                    <option value="D">D</option>
+                    <option value="F">F</option>
+                </select>
+                <select class="credits" required>
+                    <option value="" disabled selected>Credits</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="6">6</option>
+                </select>
+                <button class="remove-btn" onclick="removeSubject(this)">Remove</button>
+            </div>
+        </div>
+        <button id="addSubjectBtn" onclick="addSubject()">Add Subject</button>
+        <div class="button-group">
+            <button onclick="calculateCGPA()">Calculate CGPA</button>
+            <button id="clearBtn" onclick="clearForm()">Clear</button>
+            <button id="toggleThemeBtn" onclick="toggleTheme()">Toggle Dark Mode</button>
+            <button id="downloadPdfBtn" onclick="downloadResultPdf()">Download Result (PDF)</button>
+        </div>
+        <div class="loader" id="loader"></div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const gradePoints = {
+            'A+': 4.0, 'A': 4.0, 'A-': 3.7,
+            'B+': 3.3, 'B': 3.0, 'B-': 2.7,
+            'C+': 2.3, 'C': 2.0, 'C-': 1.7,
+            'D+': 1.3, 'D': 1.0, 'F': 0.0
+        };
+
+        const subjectTemplates = {
+            bscs1: [
+                { name: 'Programming Fundamentals', credits: 4 },
+                { name: 'Calculus I', credits: 3 },
+                { name: 'English Composition', credits: 3 },
+                { name: 'Introduction to Computing', credits: 3 }
+            ],
+            bscs2: [
+                { name: 'Data Structures', credits: 4 },
+                { name: 'Calculus II', credits: 3 },
+                { name: 'Physics', credits: 3 },
+                { name: 'Discrete Mathematics', credits: 3 }
+            ],
+            bscs3: [
+                { name: 'Object-Oriented Programming', credits: 4 },
+                { name: 'Linear Algebra', credits: 3 },
+                { name: 'Database Systems', credits: 3 },
+                { name: 'Digital Logic Design', credits: 3 }
+            ],
+            bscs4: [
+                { name: 'Operating Systems', credits: 4 },
+                { name: 'Probability & Statistics', credits: 3 },
+                { name: 'Software Engineering', credits: 3 },
+                { name: 'Computer Organization', credits: 3 }
+            ],
+            bscs5: [
+                { name: 'Algorithms', credits: 4 },
+                { name: 'Computer Networks', credits: 3 },
+                { name: 'Web Development', credits: 3 },
+                { name: 'Technical Writing', credits: 3 }
+            ],
+            bscs6: [
+                { name: 'Artificial Intelligence', credits: 3 },
+                { name: 'Compiler Construction', credits: 3 },
+                { name: 'Software Design', credits: 3 },
+                { name: 'Elective I', credits: 3 }
+            ],
+            bscs7: [
+                { name: 'Machine Learning', credits: 3 },
+                { name: 'Distributed Systems', credits: 3 },
+                { name: 'Project Management', credits: 3 },
+                { name: 'Elective II', credits: 3 }
+            ],
+            bscs8: [
+                { name: 'Final Year Project', credits: 6 },
+                { name: 'Cyber Security', credits: 3 },
+                { name: 'Professional Ethics', credits: 3 }
+            ]
+        };
+
+        // Load saved data from local storage
+        window.onload = function() {
+            const savedName = localStorage.getItem('studentName');
+            const savedSemester = localStorage.getItem('semester');
+            const savedTheme = localStorage.getItem('theme'); // 'dark' or 'light'
+
+            if (savedName) document.getElementById('studentName').value = savedName;
+            if (savedSemester) document.getElementById('semester').value = savedSemester;
+            
+            // Apply saved dark/light mode theme
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+            
+            loadSemesterData(); // Load saved semester data for the current semester
+        };
+
+        function addSubject(name = '', grade = '', credits = '') {
+            const subjectsDiv = document.getElementById('subjects');
+            const newEntry = document.createElement('div');
+            newEntry.className = 'subject-entry';
+            newEntry.innerHTML = `
+                <input type="text" class="subject-name" placeholder="Subject Name" value="${name}" required>
+                <select class="grade" required>
+                    <option value="" disabled ${!grade ? 'selected' : ''}>Select Grade</option>
+                    ${Object.keys(gradePoints).map(g => `<option value="${g}" ${grade === g ? 'selected' : ''}>${g}</option>`).join('')}
+                </select>
+                <select class="credits" required>
+                    <option value="" disabled ${!credits ? 'selected' : ''}>Credits</option>
+                    ${[1, 2, 3, 4, 6].map(c => `<option value="${c}" ${credits == c ? 'selected' : ''}>${c}</option>`).join('')}
+                </select>
+                <button class="remove-btn" onclick="removeSubject(this)">Remove</button>
+            `;
+            subjectsDiv.appendChild(newEntry);
+            // Re-apply animation for newly added subject
+            newEntry.style.animation = 'none'; // Reset animation
+            newEntry.offsetHeight; // Trigger reflow
+            newEntry.style.animation = null; // Re-apply animation
+        }
+
+        function removeSubject(button) {
+            if (document.querySelectorAll('.subject-entry').length > 1) {
+                button.parentElement.remove();
+                saveSemesterData(); // Save changes after removal
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'At least one subject is required!',
+                    confirmButtonColor: '#ff4757'
+                });
+            }
+        }
+
+        function saveSemesterData() {
+            const semester = document.getElementById('semester').value;
+            const subjects = Array.from(document.querySelectorAll('.subject-entry')).map(entry => ({
+                name: entry.querySelector('.subject-name').value,
+                grade: entry.querySelector('.grade').value,
+                credits: entry.querySelector('.credits').value
+            }));
+            let allSemesters = JSON.parse(localStorage.getItem('semesters') || '{}');
+            allSemesters[semester] = subjects;
+            localStorage.setItem('semesters', JSON.stringify(allSemesters));
+            localStorage.setItem('semester', semester); // Save current selected semester
+        }
+
+        function loadSemesterData() {
+            const semester = document.getElementById('semester').value;
+            const allSemesters = JSON.parse(localStorage.getItem('semesters') || '{}');
+            const subjects = allSemesters[semester] || [{ name: '', grade: '', credits: '' }]; // Default to one empty subject if no data
+            
+            document.getElementById('subjects').innerHTML = ''; // Clear current subjects displayed
+            subjects.forEach(subject => addSubject(subject.name, subject.grade, subject.credits));
+        }
+
+        function loadTemplate() {
+            const template = document.getElementById('subjectTemplate').value;
+            if (template && subjectTemplates[template]) {
+                document.getElementById('subjects').innerHTML = ''; // Clear current subjects
+                subjectTemplates[template].forEach(subject => {
+                    addSubject(subject.name, '', subject.credits); // Grade is empty, but name and credits are set
+                });
+                saveSemesterData(); // Save the newly loaded template to the current semester
+            } else if (template === "") { // If "No Template" is selected, clear and add one empty subject
+                document.getElementById('subjects').innerHTML = '';
+                addSubject();
+                saveSemesterData(); // Save the cleared state
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+
+        function calculateCGPA() {
+            const studentName = document.getElementById('studentName').value.trim();
+            const semester = document.getElementById('semester').value;
+            const subjects = document.querySelectorAll('.subject-entry');
+            const resultDiv = document.getElementById('result');
+            const loader = document.getElementById('loader');
+
+            loader.style.display = 'block';
+
+            // Validate inputs for the CURRENT semester
+            if (!studentName) {
+                loader.style.display = 'none';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Please enter your name.',
+                    confirmButtonColor: '#ff4757'
+                });
+                return;
+            }
+
+            const currentSemesterSubjectsData = [];
+            let currentSemesterValid = true;
+            subjects.forEach((entry, index) => {
+                const name = entry.querySelector('.subject-name').value.trim();
+                const grade = entry.querySelector('.grade').value;
+                const credits = parseInt(entry.querySelector('.credits').value);
+                if (!name || !grade || isNaN(credits) || credits <= 0) {
+                    currentSemesterValid = false;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: `Please fill all fields (Subject Name, Grade, Credits) correctly for subject ${index + 1}. Credits must be a positive number.`,
+                        confirmButtonColor: '#ff4757'
+                    });
+                } else {
+                    const weightedPoints = gradePoints[grade] * credits;
+                    currentSemesterSubjectsData.push({ name, grade, credits, weightedPoints, gradePoint: gradePoints[grade] });
+                }
+            });
+
+            if (!currentSemesterValid) {
+                loader.style.display = 'none';
+                return;
+            }
+
+            // Save the data for the currently displayed semester
+            localStorage.setItem('studentName', studentName);
+            saveSemesterData();
+
+            // Retrieve ALL saved semesters for CGPA calculation
+            const allSemesters = JSON.parse(localStorage.getItem('semesters') || '{}');
+            
+            let totalPointsCumulative = 0;
+            let totalCreditsCumulative = 0;
+            const semesterGPAs = {};
+            const progressiveCGPAs = {};
+            const semesterData = {};
+
+            // Calculate GPA and CGPA for all semesters and collect subject data
+            for (let sem = 1; sem <= 8; sem++) {
+                const semSubjects = allSemesters[String(sem)] || [];
+                let currentSemPoints = 0;
+                let currentSemCredits = 0;
+                let hasValidSubjectsInSem = false;
+                const validSubjects = [];
+
+                semSubjects.forEach(subject => {
+                    const credits = parseInt(subject.credits);
+                    const gradePoint = gradePoints[subject.grade];
+                    if (subject.name && subject.grade && !isNaN(credits) && credits > 0 && gradePoint !== undefined) {
+                        currentSemPoints += gradePoint * credits;
+                        currentSemCredits += credits;
+                        hasValidSubjectsInSem = true;
+                        validSubjects.push({
+                            name: subject.name,
+                            grade: subject.grade,
+                            credits: credits,
+                            weightedPoints: gradePoint * credits,
+                            gradePoint: gradePoint
+                        });
+                    }
+                });
+
+                if (hasValidSubjectsInSem && currentSemCredits > 0) {
+                    const semesterGPA = (currentSemPoints / currentSemCredits).toFixed(2);
+                    semesterGPAs[sem] = semesterGPA;
+                    totalPointsCumulative += currentSemPoints;
+                    totalCreditsCumulative += currentSemCredits;
+                    const cumulativeCGPA = (totalPointsCumulative / totalCreditsCumulative).toFixed(2);
+                    progressiveCGPAs[sem] = cumulativeCGPA;
+                    semesterData[sem] = {
+                        subjects: validSubjects,
+                        gpa: semesterGPA,
+                        cgpa: cumulativeCGPA
+                    };
+                }
+            }
+
+            setTimeout(() => {
+                loader.style.display = 'none';
+
+                // Build HTML for all semesters in order
+                let resultHtml = '';
+                for (let sem = 1; sem <= 8; sem++) {
+                    if (semesterData[sem]) {
+                        const data = semesterData[sem];
+                        resultHtml += `
+                            <div class="history-section">
+                                <h4>Semester ${sem} (GPA: ${data.gpa}, CGPA: ${data.cgpa})</h4>
+                                <table border="1">
+                                    <thead>
+                                        <tr>
+                                            <th>Subject Name</th>
+                                            <th>Grade</th>
+                                            <th>Credits</th>
+                                            <th>Grade Points</th>
+                                            <th>Weighted Points</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>`;
+                        data.subjects.forEach(subject => {
+                            resultHtml += `
+                                <tr>
+                                    <td>${subject.name}</td>
+                                    <td>${subject.grade}</td>
+                                    <td>${subject.credits}</td>
+                                    <td>${subject.gradePoint.toFixed(2)}</td>
+                                    <td>${subject.weightedPoints.toFixed(2)}</td>
+                                </tr>`;
+                        });
+                        resultHtml += `</tbody></table></div>`;
+                    }
+                }
+
+                // Add overall academic summary table
+                resultHtml += `
+                    <div class="summary-table">
+                        <h3>Overall Academic Summary:</h3>
+                        <table border="1">
+                            <thead>
+                                <tr>
+                                    <th>Semester</th>
+                                    <th>GPA</th>
+                                    <th>Cumulative CGPA</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+                for (let sem = 1; sem <= 8; sem++) {
+                    if (semesterData[sem]) {
+                        resultHtml += `
+                            <tr>
+                                <td>Semester ${sem}</td>
+                                <td>${semesterData[sem].gpa}</td>
+                                <td>${semesterData[sem].cgpa}</td>
+                            </tr>`;
+                    }
+                }
+                const overallCGPA = totalCreditsCumulative > 0 ? (totalPointsCumulative / totalCreditsCumulative).toFixed(2) : '0.00';
+                resultHtml += `
+                            <tr>
+                                <td><strong>Overall</strong></td>
+                                <td>-</td>
+                                <td><strong>${overallCGPA}</strong></td>
+                            </tr>
+                        </tbody>
+                        </table>
+                    </div>`;
+
+                resultDiv.innerHTML = resultHtml;
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Calculation Complete!',
+                    text: `CGPA calculated successfully for ${studentName}. Your overall CGPA is ${overallCGPA}.`,
+                    confirmButtonColor: '#1e90ff'
+                });
+            }, 500);
+        }
+
+        function clearForm() {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "Do you want to clear all semester data and form fields? This cannot be undone.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#1e90ff',
+                cancelButtonColor: '#ff4757',
+                confirmButtonText: 'Yes, clear all!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.clear();
+                    document.getElementById('studentName').value = '';
+                    document.getElementById('semester').value = '1';
+                    document.getElementById('subjects').innerHTML = '';
+                    addSubject(); // Add one default subject entry
+                    document.getElementById('result').innerHTML = '';
+                    document.getElementById('subjectTemplate').value = ''; // Reset template dropdown
+                    Swal.fire(
+                        'Cleared!',
+                        'All data has been cleared.',
+                        'success'
+                    );
+                }
+            });
+        }
+
+        async function downloadResultPdf() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const resultDiv = document.getElementById('result');
+            
+            if (!resultDiv.innerHTML.trim()) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Results to Download',
+                    text: 'Please calculate your CGPA first.',
+                    confirmButtonColor: '#fdcb6e'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Generating PDF...',
+                text: 'Please wait, this may take a moment.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const canvas = await html2canvas(resultDiv, { scale: 2 }); // Increased scale for better quality
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 190; // A4 width minus margins
+                const pageHeight = 295; // A4 height
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    doc.addPage();
+                    doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                const studentName = document.getElementById('studentName').value.trim() || 'Student';
+                doc.save(`${studentName}_CGPA_Report.pdf`);
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'PDF Downloaded!',
+                    text: 'Your CGPA report has been successfully downloaded.',
+                    confirmButtonColor: '#2ecc71'
+                });
+
+            } catch (error) {
+                console.error("Error generating PDF:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'PDF Generation Failed',
+                    text: 'There was an error generating the PDF. Please try again.',
+                    confirmButtonColor: '#ff4757'
+                });
+            }
+        }
+    </script>
+</body>
+</html>
